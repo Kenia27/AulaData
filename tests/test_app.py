@@ -1,3 +1,12 @@
+import os
+
+# IMPORTANTE:
+# Las pruebas siempre deben usar una base separada de DEV.
+os.environ["DATABASE_URL"] = (
+    "postgresql://auladata_user:AulaData123@localhost:5432/auladata_test"
+)
+os.environ["APP_ENV"] = "TEST"
+
 import pytest
 
 from app import app, db, Usuario, Aula
@@ -7,10 +16,18 @@ from werkzeug.security import generate_password_hash
 @pytest.fixture
 def cliente():
     app.config["TESTING"] = True
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["WTF_CSRF_ENABLED"] = False
 
     with app.app_context():
+
+        # Protección para evitar borrar accidentalmente DEV o PROD
+        url_bd = str(db.engine.url)
+
+        if "auladata_test" not in url_bd:
+            raise RuntimeError(
+                f"Las pruebas intentaron usar una BD incorrecta: {url_bd}"
+            )
+
+        # Solo se destruyen tablas de la BD de pruebas
         db.drop_all()
         db.create_all()
 
@@ -34,7 +51,6 @@ def cliente():
 
         db.session.remove()
         db.drop_all()
-
 
 def login(cliente, usuario, password):
     return cliente.post(
@@ -220,4 +236,3 @@ def test_usuario_consulta_no_puede_crear(cliente):
     respuesta = cliente.get("/aulas/nueva")
 
     assert respuesta.status_code == 403
-    

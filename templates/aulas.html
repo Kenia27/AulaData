@@ -25,6 +25,7 @@
             <th>Capacidad</th>
             <th>Tipo</th>
             <th>Estado</th>
+            <th>Actualización</th>
 
             {% if current_user.role == "admin" %}
                 <th>Acciones</th>
@@ -43,6 +44,7 @@
             <td>{{ aula.capacidad }}</td>
             <td>{{ aula.tipo }}</td>
             <td>{{ aula.estado }}</td>
+            <td>{{ aula.updated_at.strftime('%d/%m/%Y %H:%M') if aula.updated_at else '' }}</td>
 
             {% if current_user.role == "admin" %}
             <td>

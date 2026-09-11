@@ -1,4 +1,6 @@
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 from dotenv import load_dotenv
@@ -19,9 +21,37 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Crear carpeta para los registros de errores
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+# Configurar archivo de logs
+file_handler = RotatingFileHandler(
+    "logs/auladata.log",
+    maxBytes=10240,
+    backupCount=3
+)
+
+file_handler.setLevel(logging.INFO)
+
+file_handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s %(levelname)s: %(message)s"
+    )
+)
+
+app.logger.addHandler(file_handler)
+app.logger.setLevel(logging.INFO)
+
+app.logger.info("AulaData iniciado")
+
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "clave-temporal")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+app.config["APP_ENV"] = os.getenv("APP_ENV", "DEV")
+app.config["APP_VERSION"] = os.getenv("APP_VERSION", "0.1.0")
+app.config["APP_COMMIT"] = os.getenv("APP_COMMIT", "local")
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -120,6 +150,10 @@ def nueva_aula():
         tipo = request.form["tipo"].strip()
         estado = request.form["estado"]
 
+        if not clave or not nombre or not edificio or not tipo or not estado:
+            flash("Todos los campos son obligatorios.")
+            return render_template("formulario.html", aula=None)
+
         try:
             capacidad = int(request.form["capacidad"])
         except ValueError:
@@ -163,6 +197,15 @@ def editar_aula(id):
 
     if request.method == "POST":
         clave = request.form["clave"].strip()
+        nombre = request.form["nombre"].strip()
+        edificio = request.form["edificio"].strip()
+        tipo = request.form["tipo"].strip()
+        estado = request.form["estado"].strip()
+
+        if not clave or not nombre or not edificio or not tipo or not estado:
+            flash("Todos los campos son obligatorios.")
+            return render_template("formulario.html", aula=aula)
+
 
         existente = Aula.query.filter(
             Aula.clave == clave,
@@ -184,11 +227,11 @@ def editar_aula(id):
             return render_template("formulario.html", aula=aula)
 
         aula.clave = clave
-        aula.nombre = request.form["nombre"]
-        aula.edificio = request.form["edificio"]
+        aula.nombre = nombre
+        aula.edificio = edificio
         aula.capacidad = capacidad
-        aula.tipo = request.form["tipo"]
-        aula.estado = request.form["estado"]
+        aula.tipo = tipo
+        aula.estado = estado
 
         db.session.commit()
 

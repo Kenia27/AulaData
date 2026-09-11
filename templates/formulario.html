@@ -47,40 +47,43 @@
 
     <label>Tipo</label>
     <select name="tipo" required>
-
-        <option value="Aula">
+        <option value="Aula"
+            {% if aula and aula.tipo == "Aula" %}selected{% endif %}>
             Aula
         </option>
 
-        <option value="Laboratorio">
+        <option value="Laboratorio"
+            {% if aula and aula.tipo == "Laboratorio" %}selected{% endif %}>
             Laboratorio
         </option>
 
-        <option value="Auditorio">
+        <option value="Auditorio"
+            {% if aula and aula.tipo == "Auditorio" %}selected{% endif %}>
             Auditorio
         </option>
 
-        <option value="Taller">
+        <option value="Taller"
+            {% if aula and aula.tipo == "Taller" %}selected{% endif %}>
             Taller
         </option>
-
     </select>
 
     <label>Estado</label>
     <select name="estado" required>
-
-        <option value="activa">
+        <option value="activa"
+            {% if aula and aula.estado == "activa" %}selected{% endif %}>
             Activa
         </option>
 
-        <option value="mantenimiento">
+        <option value="mantenimiento"
+            {% if aula and aula.estado == "mantenimiento" %}selected{% endif %}>
             Mantenimiento
         </option>
 
-        <option value="inactiva">
+        <option value="inactiva"
+            {% if aula and aula.estado == "inactiva" %}selected{% endif %}>
             Inactiva
         </option>
-
     </select>
 
     <button type="submit">
