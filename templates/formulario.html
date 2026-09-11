@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h2>
+    {% if aula %}
+        Editar aula
+    {% else %}
+        Nueva aula
+    {% endif %}
+</h2>
+
+<form method="POST">
+
+    <label>Clave</label>
+    <input
+        type="text"
+        name="clave"
+        value="{{ aula.clave if aula else '' }}"
+        required
+    >
+
+    <label>Nombre</label>
+    <input
+        type="text"
+        name="nombre"
+        value="{{ aula.nombre if aula else '' }}"
+        required
+    >
+
+    <label>Edificio</label>
+    <input
+        type="text"
+        name="edificio"
+        value="{{ aula.edificio if aula else '' }}"
+        required
+    >
+
+    <label>Capacidad</label>
+    <input
+        type="number"
+        name="capacidad"
+        min="1"
+        value="{{ aula.capacidad if aula else '' }}"
+        required
+    >
+
+    <label>Tipo</label>
+    <select name="tipo" required>
+
+        <option value="Aula">
+            Aula
+        </option>
+
+        <option value="Laboratorio">
+            Laboratorio
+        </option>
+
+        <option value="Auditorio">
+            Auditorio
+        </option>
+
+        <option value="Taller">
+            Taller
+        </option>
+
+    </select>
+
+    <label>Estado</label>
+    <select name="estado" required>
+
+        <option value="activa">
+            Activa
+        </option>
+
+        <option value="mantenimiento">
+            Mantenimiento
+        </option>
+
+        <option value="inactiva">
+            Inactiva
+        </option>
+
+    </select>
+
+    <button type="submit">
+        Guardar
+    </button>
+
+    <a href="{{ url_for('listar_aulas') }}">
+        Cancelar
+    </a>
+
+</form>
+
+{% endblock %}

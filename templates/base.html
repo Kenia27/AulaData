@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AulaData</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        .contenedor {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        h1, h2 {
+            color: #2c3e50;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f0f0;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        button, .boton {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .boton {
+            background: #2c7be5;
+            color: white;
+        }
+
+        button {
+            background: #2c7be5;
+            color: white;
+        }
+
+        .peligro {
+            background: #d9534f;
+        }
+
+        .mensaje {
+            background: #e8f1ff;
+            border-left: 4px solid #2c7be5;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .barra {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="contenedor">
+
+    <h1>AulaData</h1>
+
+    {% if current_user.is_authenticated %}
+        <div class="barra">
+            Usuario:
+            <strong>{{ current_user.username }}</strong>
+
+            |
+            Rol:
+            <strong>{{ current_user.role }}</strong>
+
+            |
+            <a href="{{ url_for('logout') }}">
+                Cerrar sesión
+            </a>
+        </div>
+    {% endif %}
+
+    {% with mensajes = get_flashed_messages() %}
+        {% if mensajes %}
+            {% for mensaje in mensajes %}
+                <div class="mensaje">
+                    {{ mensaje }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block contenido %}
+    {% endblock %}
+
+</div>
+
+</body>
+</html>
