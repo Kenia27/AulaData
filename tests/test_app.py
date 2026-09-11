@@ -1,11 +1,32 @@
 import os
+from dotenv import load_dotenv
 
-# IMPORTANTE:
-# Las pruebas siempre deben usar una base separada de DEV.
-os.environ["DATABASE_URL"] = (
-    "postgresql://auladata_user:AulaData123@localhost:5432/auladata_test"
-)
+load_dotenv()
+
+test_admin_password = os.getenv("TEST_ADMIN_PASSWORD")
+test_consulta_password = os.getenv("TEST_CONSULTA_PASSWORD")
+
+if not test_admin_password or not test_consulta_password:
+    raise RuntimeError(
+        "Faltan TEST_ADMIN_PASSWORD o TEST_CONSULTA_PASSWORD."
+    )
+
+test_host = os.getenv("TEST_DB_HOST")
+test_port = os.getenv("TEST_DB_PORT", "5432")
+test_name = os.getenv("TEST_DB_NAME")
+test_user = os.getenv("TEST_DB_USER")
+test_password = os.getenv("TEST_DB_PASSWORD")
+
+if not all([test_host, test_name, test_user, test_password]):
+    raise RuntimeError("Faltan variables de base de datos de TEST.")
+
+os.environ["DB_HOST"] = test_host
+os.environ["DB_PORT"] = test_port
+os.environ["DB_NAME"] = test_name
+os.environ["DB_USER"] = test_user
+os.environ["DB_PASSWORD"] = test_password
 os.environ["APP_ENV"] = "TEST"
+
 
 import pytest
 
@@ -22,7 +43,7 @@ def cliente():
         # Protección para evitar borrar accidentalmente DEV o PROD
         url_bd = str(db.engine.url)
 
-        if "auladata_test" not in url_bd:
+        if db.engine.url.database != "auladata_test":
             raise RuntimeError(
                 f"Las pruebas intentaron usar una BD incorrecta: {url_bd}"
             )
@@ -33,13 +54,13 @@ def cliente():
 
         admin = Usuario(
             username="admin_test",
-            password=generate_password_hash("Admin123"),
+            password=generate_password_hash(test_admin_password),
             role="admin"
         )
 
         consulta = Usuario(
             username="consulta_test",
-            password=generate_password_hash("Consulta123"),
+            password=generate_password_hash(test_consulta_password),
             role="consulta"
         )
 
@@ -74,7 +95,7 @@ def test_login_correcto(cliente):
     respuesta = login(
         cliente,
         "admin_test",
-        "Admin123"
+        test_admin_password
     )
 
     assert respuesta.status_code == 200
@@ -92,7 +113,7 @@ def test_login_incorrecto(cliente):
 
 
 def test_crear_aula(cliente):
-    login(cliente, "admin_test", "Admin123")
+    login(cliente, "admin_test", test_admin_password)
 
     respuesta = cliente.post(
         "/aulas/nueva",
@@ -115,7 +136,7 @@ def test_crear_aula(cliente):
 
 
 def test_clave_duplicada(cliente):
-    login(cliente, "admin_test", "Admin123")
+    login(cliente, "admin_test", test_admin_password)
 
     datos = {
         "clave": "A101",
@@ -138,7 +159,7 @@ def test_clave_duplicada(cliente):
 
 
 def test_capacidad_invalida(cliente):
-    login(cliente, "admin_test", "Admin123")
+    login(cliente, "admin_test", test_admin_password)
 
     respuesta = cliente.post(
         "/aulas/nueva",
@@ -157,7 +178,7 @@ def test_capacidad_invalida(cliente):
 
 
 def test_editar_aula(cliente):
-    login(cliente, "admin_test", "Admin123")
+    login(cliente, "admin_test", test_admin_password)
 
     cliente.post(
         "/aulas/nueva",
@@ -196,7 +217,7 @@ def test_editar_aula(cliente):
 
 
 def test_baja_logica(cliente):
-    login(cliente, "admin_test", "Admin123")
+    login(cliente, "admin_test", test_admin_password)
 
     cliente.post(
         "/aulas/nueva",
@@ -230,9 +251,107 @@ def test_usuario_consulta_no_puede_crear(cliente):
     login(
         cliente,
         "consulta_test",
-        "Consulta123"
+        test_consulta_password
     )
 
     respuesta = cliente.get("/aulas/nueva")
 
     assert respuesta.status_code == 403
+
+def test_usuario_consulta_no_puede_editar(cliente):
+    login(
+        cliente,
+        "admin_test",
+        test_admin_password
+    )
+
+    cliente.post(
+        "/aulas/nueva",
+        data={
+            "clave": "A104",
+            "nombre": "Aula Protegida",
+            "edificio": "A",
+            "capacidad": "35",
+            "tipo": "Aula",
+            "estado": "activa"
+        }
+    )
+
+    with app.app_context():
+        aula = Aula.query.filter_by(clave="A104").first()
+        aula_id = aula.id
+
+    cliente.get("/logout")
+
+    login(
+        cliente,
+        "consulta_test",
+        test_consulta_password
+    )
+
+    respuesta = cliente.get(
+        f"/aulas/{aula_id}/editar"
+    )
+
+    assert respuesta.status_code == 403
+
+def test_usuario_consulta_no_puede_eliminar(cliente):
+    login(
+        cliente,
+        "admin_test",
+        test_admin_password
+    )
+
+    cliente.post(
+        "/aulas/nueva",
+        data={
+            "clave": "A105",
+            "nombre": "Aula Protegida",
+            "edificio": "B",
+            "capacidad": "25",
+            "tipo": "Aula",
+            "estado": "activa"
+        }
+    )
+
+    with app.app_context():
+        aula = Aula.query.filter_by(clave="A105").first()
+        aula_id = aula.id
+
+    cliente.get("/logout")
+
+    login(
+        cliente,
+        "consulta_test",
+        test_consulta_password
+    )
+
+    respuesta = cliente.post(
+        f"/aulas/{aula_id}/eliminar"
+    )
+
+    assert respuesta.status_code == 403
+
+def test_campos_obligatorios(cliente):
+    login(
+        cliente,
+        "admin_test",
+        test_admin_password
+    )
+
+    respuesta = cliente.post(
+        "/aulas/nueva",
+        data={
+            "clave": "",
+            "nombre": "",
+            "edificio": "",
+            "capacidad": "20",
+            "tipo": "",
+            "estado": ""
+        },
+        follow_redirects=True
+    )
+
+    assert respuesta.status_code == 200
+    assert b"obligatorios" in respuesta.data
+

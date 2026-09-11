@@ -2,7 +2,7 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -17,7 +17,7 @@ from flask_login import (
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 
-load_dotenv()
+load_dotenv(override=False)
 
 app = Flask(__name__)
 
@@ -46,7 +46,22 @@ app.logger.setLevel(logging.INFO)
 app.logger.info("AulaData iniciado")
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "clave-temporal")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+db_host = os.getenv("DB_HOST")
+db_port = os.getenv("DB_PORT", "5432")
+db_name = os.getenv("DB_NAME")
+db_user = os.getenv("DB_USER")
+db_password = os.getenv("DB_PASSWORD")
+
+if not all([db_host, db_name, db_user, db_password]):
+    raise RuntimeError(
+        "Faltan variables de configuración de la base de datos."
+    )
+
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    f"postgresql://{quote_plus(db_user)}:"
+    f"{quote_plus(db_password)}@"
+    f"{db_host}:{db_port}/{db_name}"
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["APP_ENV"] = os.getenv("APP_ENV", "DEV")
@@ -269,32 +284,39 @@ def health():
 @app.cli.command("crear-usuarios")
 def crear_usuarios():
 
+    admin_password = os.getenv("ADMIN_INITIAL_PASSWORD")
+    consulta_password = os.getenv("CONSULTA_INITIAL_PASSWORD")
+
+    if not admin_password or not consulta_password:
+        raise RuntimeError(
+            "Faltan ADMIN_INITIAL_PASSWORD o CONSULTA_INITIAL_PASSWORD."
+        )
+
     if not Usuario.query.filter_by(username="admin").first():
         admin = Usuario(
             username="admin",
-            password=generate_password_hash("Admin123"),
+            password=generate_password_hash(admin_password),
             role="admin"
         )
 
+        db.session.add(admin)
+
+    if not Usuario.query.filter_by(username="consulta").first():
         consulta = Usuario(
             username="consulta",
-            password=generate_password_hash("Consulta123"),
+            password=generate_password_hash(consulta_password),
             role="consulta"
         )
 
-        db.session.add(admin)
         db.session.add(consulta)
-        db.session.commit()
 
-        print("Usuarios iniciales creados.")
+    db.session.commit()
 
-    else:
-        print("Los usuarios ya existen.")
+    print("Usuarios iniciales verificados/creados correctamente.")
 
-
-if __name__ == "__main__":
-    app.run(
-        debug=True,
-        host="0.0.0.0",
-        port=5000
-    )
+    if __name__ == "__main__":
+        app.run(
+            debug=True,
+            host="0.0.0.0",
+            port=5000
+        )
