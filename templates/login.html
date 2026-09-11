@@ -35,7 +35,18 @@
             </div>
             <div class="field">
                 <label for="password">Contraseña</label>
-                <input id="password" type="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+                <div class="password-field">
+                    <input id="password" type="password" name="password" autocomplete="current-password" placeholder="Tu contraseña" required>
+                    <button class="password-toggle" type="button" aria-label="Mostrar contraseña" aria-pressed="false" data-password-toggle>
+                        <svg data-eye-icon width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/>
+                            <circle cx="12" cy="12" r="2.5"/>
+                        </svg>
+                        <svg data-eye-off-icon width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true" hidden>
+                            <path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 4.2A10.8 10.8 0 0 1 12 4c6 0 9.5 8 9.5 8a16.6 16.6 0 0 1-3.2 4.3M6.6 6.7C3.9 8.5 2.5 12 2.5 12s3.5 6 9.5 6c1.1 0 2.1-.2 3-.5"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
             <button type="submit">
                 Entrar al panel
@@ -45,4 +56,19 @@
         </form>
     </section>
 </div>
+<script>
+    const passwordInput = document.querySelector("#password");
+    const passwordToggle = document.querySelector("[data-password-toggle]");
+    const eyeIcon = document.querySelector("[data-eye-icon]");
+    const eyeOffIcon = document.querySelector("[data-eye-off-icon]");
+
+    passwordToggle?.addEventListener("click", () => {
+        const isVisible = passwordInput.type === "text";
+        passwordInput.type = isVisible ? "password" : "text";
+        passwordToggle.setAttribute("aria-label", isVisible ? "Mostrar contraseña" : "Ocultar contraseña");
+        passwordToggle.setAttribute("aria-pressed", String(!isVisible));
+        eyeIcon.hidden = !isVisible;
+        eyeOffIcon.hidden = isVisible;
+    });
+</script>
 {% endblock %}
