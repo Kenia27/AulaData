@@ -46,22 +46,25 @@ app.logger.setLevel(logging.INFO)
 app.logger.info("AulaData iniciado")
 
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "clave-temporal")
+database_url = os.getenv("DATABASE_URL")
 db_host = os.getenv("DB_HOST")
 db_port = os.getenv("DB_PORT", "5432")
 db_name = os.getenv("DB_NAME")
 db_user = os.getenv("DB_USER")
 db_password = os.getenv("DB_PASSWORD")
 
-if not all([db_host, db_name, db_user, db_password]):
+if database_url:
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+elif not all([db_host, db_name, db_user, db_password]):
     raise RuntimeError(
         "Faltan variables de configuración de la base de datos."
     )
-
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"postgresql://{quote_plus(db_user)}:"
-    f"{quote_plus(db_password)}@"
-    f"{db_host}:{db_port}/{db_name}"
-)
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"postgresql://{quote_plus(db_user)}:"
+        f"{quote_plus(db_password)}@"
+        f"{db_host}:{db_port}/{db_name}"
+    )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["APP_ENV"] = os.getenv("APP_ENV", "DEV")
@@ -314,9 +317,11 @@ def crear_usuarios():
 
     print("Usuarios iniciales verificados/creados correctamente.")
 
-    if __name__ == "__main__":
-        app.run(
-            debug=True,
-            host="0.0.0.0",
-            port=5000
-        )
+
+
+if __name__ == "__main__":
+    app.run(
+        debug=True,
+        host="0.0.0.0",
+        port=5000
+    )

@@ -1,99 +1,56 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-
-<h2>
-    {% if aula %}
-        Editar aula
-    {% else %}
-        Nueva aula
-    {% endif %}
-</h2>
-
-<form method="POST">
-
-    <label>Clave</label>
-    <input
-        type="text"
-        name="clave"
-        value="{{ aula.clave if aula else '' }}"
-        required
-    >
-
-    <label>Nombre</label>
-    <input
-        type="text"
-        name="nombre"
-        value="{{ aula.nombre if aula else '' }}"
-        required
-    >
-
-    <label>Edificio</label>
-    <input
-        type="text"
-        name="edificio"
-        value="{{ aula.edificio if aula else '' }}"
-        required
-    >
-
-    <label>Capacidad</label>
-    <input
-        type="number"
-        name="capacidad"
-        min="1"
-        value="{{ aula.capacidad if aula else '' }}"
-        required
-    >
-
-    <label>Tipo</label>
-    <select name="tipo" required>
-        <option value="Aula"
-            {% if aula and aula.tipo == "Aula" %}selected{% endif %}>
-            Aula
-        </option>
-
-        <option value="Laboratorio"
-            {% if aula and aula.tipo == "Laboratorio" %}selected{% endif %}>
-            Laboratorio
-        </option>
-
-        <option value="Auditorio"
-            {% if aula and aula.tipo == "Auditorio" %}selected{% endif %}>
-            Auditorio
-        </option>
-
-        <option value="Taller"
-            {% if aula and aula.tipo == "Taller" %}selected{% endif %}>
-            Taller
-        </option>
-    </select>
-
-    <label>Estado</label>
-    <select name="estado" required>
-        <option value="activa"
-            {% if aula and aula.estado == "activa" %}selected{% endif %}>
-            Activa
-        </option>
-
-        <option value="mantenimiento"
-            {% if aula and aula.estado == "mantenimiento" %}selected{% endif %}>
-            Mantenimiento
-        </option>
-
-        <option value="inactiva"
-            {% if aula and aula.estado == "inactiva" %}selected{% endif %}>
-            Inactiva
-        </option>
-    </select>
-
-    <button type="submit">
-        Guardar
-    </button>
-
-    <a href="{{ url_for('listar_aulas') }}">
-        Cancelar
-    </a>
-
-</form>
-
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Directorio de espacios</div>
+        <h1>{{ "Editar aula" if aula else "Nueva aula" }}</h1>
+        <p>{{ "Actualiza la información para mantener el directorio confiable." if aula else "Registra un nuevo espacio para que tu equipo pueda encontrarlo." }}</p>
+    </div>
+</div>
+<section class="data-panel form-panel">
+    <h2>Información del aula</h2>
+    <p class="form-intro">Los campos marcados son necesarios para guardar el registro.</p>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="field">
+                <label for="clave">Clave del aula</label>
+                <input id="clave" type="text" name="clave" value="{{ aula.clave if aula else '' }}" placeholder="Ej. A-101" required>
+            </div>
+            <div class="field">
+                <label for="nombre">Nombre del espacio</label>
+                <input id="nombre" type="text" name="nombre" value="{{ aula.nombre if aula else '' }}" placeholder="Ej. Sala de innovación" required>
+            </div>
+            <div class="field">
+                <label for="edificio">Edificio</label>
+                <input id="edificio" type="text" name="edificio" value="{{ aula.edificio if aula else '' }}" placeholder="Ej. Edificio Norte" required>
+            </div>
+            <div class="field">
+                <label for="capacidad">Capacidad</label>
+                <input id="capacidad" type="number" name="capacidad" min="1" value="{{ aula.capacidad if aula else '' }}" placeholder="Ej. 30" required>
+            </div>
+            <div class="field">
+                <label for="tipo">Tipo de espacio</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="Aula" {% if aula and aula.tipo == "Aula" %}selected{% endif %}>Aula</option>
+                    <option value="Laboratorio" {% if aula and aula.tipo == "Laboratorio" %}selected{% endif %}>Laboratorio</option>
+                    <option value="Auditorio" {% if aula and aula.tipo == "Auditorio" %}selected{% endif %}>Auditorio</option>
+                    <option value="Taller" {% if aula and aula.tipo == "Taller" %}selected{% endif %}>Taller</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="estado">Estado operativo</label>
+                <select id="estado" name="estado" required>
+                    <option value="activa" {% if aula and aula.estado == "activa" %}selected{% endif %}>Activa</option>
+                    <option value="mantenimiento" {% if aula and aula.estado == "mantenimiento" %}selected{% endif %}>Mantenimiento</option>
+                    <option value="inactiva" {% if aula and aula.estado == "inactiva" %}selected{% endif %}>Inactiva</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-actions">
+            <a href="{{ url_for('listar_aulas') }}" class="button secondary">Cancelar</a>
+            <button type="submit">Guardar aula <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m5 12 4 4L19 6"/></svg></button>
+        </div>
+    </form>
+</section>
 {% endblock %}

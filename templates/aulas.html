@@ -1,90 +1,78 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-
-<h2>Gestión de aulas</h2>
-
-{% if current_user.role == "admin" %}
-
-    <a
-        href="{{ url_for('nueva_aula') }}"
-        class="boton"
-    >
-        + Nueva aula
+{% set activas = namespace(total=0, capacidad=0, mantenimiento=0) %}
+{% for aula in aulas %}
+    {% set activas.total = activas.total + 1 %}
+    {% set activas.capacidad = activas.capacidad + aula.capacidad %}
+    {% if aula.estado == "mantenimiento" %}{% set activas.mantenimiento = activas.mantenimiento + 1 %}{% endif %}
+{% endfor %}
+<div class="page-heading">
+    <div>
+        <div class="eyebrow">Espacios académicos</div>
+        <h1>Tu mapa de aulas</h1>
+        <p>Una vista rápida de los espacios activos, su capacidad y estado operativo.</p>
+    </div>
+    {% if current_user.role == "admin" %}
+    <a href="{{ url_for('nueva_aula') }}" class="button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+        Nueva aula
     </a>
+    {% endif %}
+</div>
 
-{% endif %}
+<section class="stats-grid" aria-label="Resumen de aulas">
+    <div class="stat-card">
+        <div><div class="stat-label">Aulas activas</div><div class="stat-value">{{ activas.total }}</div></div>
+        <span class="stat-icon blue"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V5l7-3 7 3v16M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></span>
+    </div>
+    <div class="stat-card">
+        <div><div class="stat-label">Capacidad disponible</div><div class="stat-value">{{ activas.capacidad }}</div></div>
+        <span class="stat-icon teal"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+    </div>
+    <div class="stat-card">
+        <div><div class="stat-label">En mantenimiento</div><div class="stat-value">{{ activas.mantenimiento }}</div></div>
+        <span class="stat-icon amber"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m14.7 6.3 3 3M4 20l6.6-6.6M15 3a4 4 0 0 0 5.4 5.4l-5.1 5.1a2 2 0 0 1-2.8 0l-1-1a2 2 0 0 1 0-2.8l5.1-5.1A4 4 0 0 0 15 3Z"/></svg></span>
+    </div>
+</section>
 
-<table>
-
-    <thead>
-        <tr>
-            <th>Clave</th>
-            <th>Nombre</th>
-            <th>Edificio</th>
-            <th>Capacidad</th>
-            <th>Tipo</th>
-            <th>Estado</th>
-            <th>Actualización</th>
-
-            {% if current_user.role == "admin" %}
-                <th>Acciones</th>
-            {% endif %}
-        </tr>
-    </thead>
-
-    <tbody>
-
-        {% for aula in aulas %}
-
-        <tr>
-            <td>{{ aula.clave }}</td>
-            <td>{{ aula.nombre }}</td>
-            <td>{{ aula.edificio }}</td>
-            <td>{{ aula.capacidad }}</td>
-            <td>{{ aula.tipo }}</td>
-            <td>{{ aula.estado }}</td>
-            <td>{{ aula.updated_at.strftime('%d/%m/%Y %H:%M') if aula.updated_at else '' }}</td>
-
-            {% if current_user.role == "admin" %}
-            <td>
-
-                <a
-                    href="{{ url_for('editar_aula', id=aula.id) }}"
-                    class="boton"
-                >
-                    Editar
-                </a>
-
-                <form
-                    method="POST"
-                    action="{{ url_for('eliminar_aula', id=aula.id) }}"
-                    style="display:inline;"
-                >
-                    <button
-                        type="submit"
-                        class="peligro"
-                    >
-                        Dar de baja
-                    </button>
-                </form>
-
-            </td>
-            {% endif %}
-        </tr>
-
-        {% else %}
-
-        <tr>
-            <td colspan="7">
-                No hay aulas registradas.
-            </td>
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
+<section class="data-panel">
+    <div class="panel-header">
+        <div class="panel-title"><h2>Directorio de aulas</h2><span class="count-badge">{{ aulas|length }}</span></div>
+        <span class="stat-label">Actualizado en tiempo real</span>
+    </div>
+    {% if aulas %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Clave</th><th>Espacio</th><th>Edificio</th><th>Capacidad</th><th>Tipo</th><th>Estado</th><th>Última actualización</th>{% if current_user.role == "admin" %}<th>Acciones</th>{% endif %}</tr></thead>
+            <tbody>
+            {% for aula in aulas %}
+            <tr>
+                <td><span class="room-key">{{ aula.clave }}</span></td>
+                <td><span class="room-name">{{ aula.nombre }}</span></td>
+                <td>{{ aula.edificio }}</td>
+                <td>{{ aula.capacidad }} lugares</td>
+                <td>{{ aula.tipo }}</td>
+                <td><span class="status {{ aula.estado|lower|replace(' ', '-') }}">{{ aula.estado }}</span></td>
+                <td>{{ aula.updated_at.strftime('%d %b %Y') if aula.updated_at else 'Sin registro' }}</td>
+                {% if current_user.role == "admin" %}
+                <td><div class="actions">
+                    <a href="{{ url_for('editar_aula', id=aula.id) }}" class="button secondary small">Editar</a>
+                    <form method="POST" action="{{ url_for('eliminar_aula', id=aula.id) }}" class="inline-form"><button type="submit" class="danger small">Baja</button></form>
+                </div></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V5l7-3 7 3v16M9 9h1M14 9h1M9 13h1M14 13h1"/></svg></div>
+        <h3>Aún no hay aulas registradas</h3>
+        <p>Empieza agregando el primer espacio académico al directorio.</p>
+        {% if current_user.role == "admin" %}<a href="{{ url_for('nueva_aula') }}" class="button">Crear primera aula</a>{% endif %}
+    </div>
+    {% endif %}
+</section>
 {% endblock %}
