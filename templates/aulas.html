@@ -12,6 +12,7 @@
         <div class="eyebrow">Espacios académicos</div>
         <h1>Tu mapa de aulas</h1>
         <p>Una vista rápida de los espacios activos, su capacidad y estado operativo.</p>
+        <p class="version-tag" style="opacity:.6;font-size:.85em;">Etiqueta de prueba — flujo Git DEV</p>
     </div>
     {% if current_user.role == "admin" %}
     <a href="{{ url_for('nueva_aula') }}" class="button">
